@@ -2,6 +2,11 @@
   <h1>RouteLens</h1>
   <p><strong>Traffic Decision Debugging System</strong></p>
   <p>Simulate, visualize, and debug Kubernetes Gateway API routing decisions — without touching a single production server.</p>
+<p>
+  <a href="https://oprekersejati.github.io/RouteLens/">
+    <img src="https://img.shields.io/badge/live%20demo-https://oprekersejati.github.io/RouteLens/-success?style=for-the-badge" alt="Live Demo">
+  </a>
+</p>
   <p>
     <img src="https://img.shields.io/badge/Go-1.23-00ADD8?logo=go" alt="Go 1.23">
     <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react" alt="React 19">
