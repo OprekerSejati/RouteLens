@@ -82,8 +82,14 @@ Catches configuration problems before they reach production:
 
 ## Quick Start
 
+### One-command (choose one)
+
 ```bash
+# Option A — using Make
 make dev
+
+# Option B — using bash script
+./run.sh dev
 ```
 
 ```
@@ -95,7 +101,7 @@ make dev
 
 ### Production Mode
 ```bash
-make prod
+make prod        # or ./run.sh prod
 ```
 
 ```
@@ -104,7 +110,7 @@ Server running at http://localhost:8080
 
 ### Standalone Binary
 ```bash
-make build
+make build       # or ./run.sh build
 ./server
 ```
 
@@ -177,6 +183,7 @@ sample/
   06-rate-limit-edge-cases.yaml    # Rate limit + 404/503
   07-regex-header-complex.yaml     # Regex path + complex headers
 Makefile                           # dev, prod, build commands
+run.sh                             # bash alternative to Makefile
 ```
 
 ---
