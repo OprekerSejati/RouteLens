@@ -83,20 +83,29 @@ Catches configuration problems before they reach production:
 ## Quick Start
 
 ```bash
-# Backend (Go)
-cd backend && go run ./cmd/server/
-
-# Frontend (separate terminal, dev mode with HMR)
-cd frontend && npm install && npm run dev
+make dev
 ```
 
-Open `http://localhost:5173` — paste a YAML config, set a request, and hit **Simulate**.
+```
+┌──────────────────────┬─────────────────────┐
+│ Frontend (HMR)       │ http://localhost:5173 │
+│ Backend (API)        │ http://localhost:8080 │
+└──────────────────────┴─────────────────────┘
+```
 
-### Production Build
+### Production Mode
 ```bash
-cd frontend && npm run build
-cd ../backend && go run ./cmd/server/
-# Server serves everything on :8080
+make prod
+```
+
+```
+Server running at http://localhost:8080
+```
+
+### Standalone Binary
+```bash
+make build
+./server
 ```
 
 ---
@@ -167,6 +176,7 @@ sample/
   05-wildcard-negative-trace.yaml  # Wildcard host + negative trace
   06-rate-limit-edge-cases.yaml    # Rate limit + 404/503
   07-regex-header-complex.yaml     # Regex path + complex headers
+Makefile                           # dev, prod, build commands
 ```
 
 ---
