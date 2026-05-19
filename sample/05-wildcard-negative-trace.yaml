@@ -1,0 +1,99 @@
+# ============================================================
+# 05 — Wildcard Host + Negative Trace Demo
+# ============================================================
+# Requests:
+#   GET blog.example.com/articles/hello   → blog-route matched
+#   GET blog.example.com/admin            → NO ROUTE (admin-route expects api subdomain!)
+#   POST blog.example.com/articles        → NO ROUTE (blog-route only accepts GET)
+#
+# Negative trace akan muncul menunjukan route mana yg gagal & alasannya:
+#   - admin-route → header mismatch (requires x-admin header)
+#   - blog-route  → method mismatch (kalo pake POST)
+# ============================================================
+
+listeners:
+  - name: listener-1
+    port: 80
+    protocol: HTTP
+    hostnames:
+      - api.example.com
+      - blog.example.com
+
+virtualHosts:
+  - name: vh-api
+    domains:
+      - api.example.com
+    routes:
+      - users-route
+      - admin-route
+
+  - name: vh-blog
+    domains:
+      - blog.example.com
+    routes:
+      - blog-route
+
+routes:
+  - id: users-route
+    priority: 0
+    createdAt: 1000
+    match:
+      path:
+        type: prefix
+        value: /users
+      method:
+        - GET
+      headers: []
+    filters: []
+    backend:
+      type: single
+      clusters:
+        - name: users-service
+
+  - id: admin-route
+    priority: 1
+    createdAt: 1001
+    match:
+      path:
+        type: prefix
+        value: /admin
+      method:
+        - GET
+      headers:
+        - name: x-admin
+          type: presence
+    filters: []
+    backend:
+      type: single
+      clusters:
+        - name: admin-service
+
+  - id: blog-route
+    priority: 0
+    createdAt: 1002
+    match:
+      path:
+        type: prefix
+        value: /articles
+      method:
+        - GET
+      headers: []
+    filters: []
+    backend:
+      type: single
+      clusters:
+        - name: blog-service
+
+filters: []
+
+clusters:
+  - name: users-service
+    endpoints:
+      - users-pod-1
+  - name: admin-service
+    endpoints:
+      - admin-pod-1
+  - name: blog-service
+    endpoints:
+      - blog-pod-1
+      - blog-pod-2

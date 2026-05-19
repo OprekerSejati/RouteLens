@@ -1,0 +1,98 @@
+# ============================================================
+# 06 — Rate Limiting + Edge Cases
+# ============================================================
+# Requests:
+#   GET api.example.com/status         → ✅ OK (no filter)
+#   GET api.example.com/sensitive      → ❌ rate_limit rejected 429 (limited=true)
+#   GET api.example.com/nowhere        → ❌ NO_ROUTE (path /nowhere not in any route)
+#
+# Edge cases:
+#   - 404 when path doesn't match any route
+#   - 429 when rate limit triggers
+#   - 503 when cluster has no endpoints
+# ============================================================
+
+listeners:
+  - name: listener-1
+    port: 80
+    protocol: HTTP
+    hostnames:
+      - api.example.com
+
+virtualHosts:
+  - name: vh-1
+    domains:
+      - api.example.com
+    routes:
+      - status-route
+      - sensitive-route
+      - broken-route
+
+routes:
+  - id: status-route
+    priority: 0
+    createdAt: 1000
+    match:
+      path:
+        type: exact
+        value: /status
+      method:
+        - GET
+      headers: []
+    filters: []
+    backend:
+      type: single
+      clusters:
+        - name: status-service
+
+  - id: sensitive-route
+    priority: 1
+    createdAt: 1001
+    match:
+      path:
+        type: prefix
+        value: /sensitive
+      method:
+        - GET
+      headers:
+        - name: authorization
+          type: presence
+    filters:
+      - rate-limit
+    backend:
+      type: single
+      clusters:
+        - name: sensitive-service
+
+  - id: broken-route
+    priority: 0
+    createdAt: 1002
+    match:
+      path:
+        type: prefix
+        value: /broken
+      method:
+        - GET
+      headers: []
+    filters: []
+    backend:
+      type: single
+      clusters:
+        - name: empty-cluster
+
+filters:
+  - id: rate-limit
+    type: rate_limit
+    config:
+      limited: true       # ← ubah ke false untuk bypass rate limit
+      status: 429
+
+clusters:
+  - name: status-service
+    endpoints:
+      - status-pod-1
+  - name: sensitive-service
+    endpoints:
+      - sensitive-pod-1
+  - name: empty-cluster
+    endpoints: []

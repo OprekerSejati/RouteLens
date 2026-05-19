@@ -1,0 +1,65 @@
+# ============================================================
+# 03 — Rewrite + Header Mutation
+# ============================================================
+# Request: GET api.example.com/api/users/123
+# Mutations:
+#   1. Rewrite: /api/users/123 → /v1/users/123
+#   2. Header mod: add "x-request-id" with value "trace-abc123"
+# ============================================================
+
+listeners:
+  - name: listener-1
+    port: 80
+    protocol: HTTP
+    hostnames:
+      - api.example.com
+
+virtualHosts:
+  - name: vh-1
+    domains:
+      - api.example.com
+    routes:
+      - api-route
+
+routes:
+  - id: api-route
+    priority: 0
+    createdAt: 1000
+    match:
+      path:
+        type: prefix
+        value: /api
+      method:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+      headers: []
+    filters:
+      - strip-prefix
+      - trace-header
+    backend:
+      type: single
+      clusters:
+        - name: api-service
+
+filters:
+  - id: strip-prefix
+    type: rewrite
+    config:
+      from: /api
+      to: ""
+
+  - id: trace-header
+    type: header_mod
+    config:
+      action: add
+      key: x-request-id
+      value: trace-abc123
+
+clusters:
+  - name: api-service
+    endpoints:
+      - api-pod-1
+      - api-pod-2
+      - api-pod-3

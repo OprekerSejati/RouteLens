@@ -1,0 +1,7 @@
+project_docs/*
+frontend/dist/*
+frontend/node_modules/*
+playground/dist/*
+playground/node_modules/*
+.DS_Store
+server

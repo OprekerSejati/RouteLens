@@ -1,0 +1,75 @@
+# ============================================================
+# 02 — Auth Filter + Rejection
+# ============================================================
+# Requests:
+#   GET api.example.com/admin with header "authorization: Bearer x"  → ✅ passed (auth.reject=false)
+#   GET api.example.com/admin with header "authorization: Bearer x"  → ❌ rejected 401 (change reject to true)
+# ============================================================
+
+listeners:
+  - name: listener-1
+    port: 80
+    protocol: HTTP
+    hostnames:
+      - api.example.com
+
+virtualHosts:
+  - name: vh-1
+    domains:
+      - api.example.com
+    routes:
+      - admin-route
+      - public-route
+
+routes:
+  - id: admin-route
+    priority: 1
+    createdAt: 1000
+    match:
+      path:
+        type: prefix
+        value: /admin
+      method:
+        - GET
+        - POST
+      headers:
+        - name: authorization
+          type: presence
+    filters:
+      - auth-filter
+    backend:
+      type: single
+      clusters:
+        - name: admin-service
+
+  - id: public-route
+    priority: 0
+    createdAt: 1001
+    match:
+      path:
+        type: prefix
+        value: /public
+      method:
+        - GET
+      headers: []
+    filters: []
+    backend:
+      type: single
+      clusters:
+        - name: public-service
+
+filters:
+  - id: auth-filter
+    type: auth
+    config:
+      reject: false        # ← ubah ke true untuk lihat rejection 401
+      status: 401
+
+clusters:
+  - name: admin-service
+    endpoints:
+      - admin-pod-1
+  - name: public-service
+    endpoints:
+      - public-pod-1
+      - public-pod-2

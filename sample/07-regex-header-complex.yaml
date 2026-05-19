@@ -1,0 +1,90 @@
+# ============================================================
+# 07 — Regex Path + Complex Header Matching
+# ============================================================
+# Request: GET api.example.com/users/42/profile
+#          with header "authorization: Bearer eyJhbGci..."
+#          with header "x-region: eu-west-1"
+#
+# Features:
+#   - Regex path match: /users/\d+/profile
+#   - Header exact match: x-region must be "eu-west-1"
+#   - Header regex match: authorization must match "^Bearer\s+"
+# ============================================================
+
+listeners:
+  - name: listener-1
+    port: 80
+    protocol: HTTP
+    hostnames:
+      - api.example.com
+
+virtualHosts:
+  - name: vh-1
+    domains:
+      - api.example.com
+    routes:
+      - user-profile-route
+      - static-route
+
+routes:
+  - id: user-profile-route
+    priority: 2
+    createdAt: 1000
+    match:
+      path:
+        type: regex
+        value: ^/users/\d+/profile$
+      method:
+        - GET
+      headers:
+        - name: authorization
+          type: regex
+          value: "^Bearer\\s+"
+        - name: x-region
+          type: exact
+          value: eu-west-1
+    filters:
+      - region-header
+    backend:
+      type: single
+      clusters:
+        - name: user-profile-eu
+
+  - id: static-route
+    priority: 0
+    createdAt: 1001
+    match:
+      path:
+        type: prefix
+        value: /static
+      method:
+        - GET
+      headers: []
+    filters: []
+    backend:
+      type: weighted
+      clusters:
+        - name: static-cdn-1
+          weight: 50
+        - name: static-cdn-2
+          weight: 50
+
+filters:
+  - id: region-header
+    type: header_mod
+    config:
+      action: set
+      key: x-upstream-region
+      value: eu-west
+
+clusters:
+  - name: user-profile-eu
+    endpoints:
+      - profile-eu-1
+      - profile-eu-2
+  - name: static-cdn-1
+    endpoints:
+      - cdn-us-1
+  - name: static-cdn-2
+    endpoints:
+      - cdn-eu-1

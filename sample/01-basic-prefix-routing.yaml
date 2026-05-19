@@ -1,0 +1,66 @@
+# ============================================================
+# 01 — Basic Prefix Routing
+# ============================================================
+# Request: GET api.example.com/users/123
+# Result: Matches listener → vhost → "users-route" → users-service → users-pod-1
+# ============================================================
+
+listeners:
+  - name: listener-1
+    port: 80
+    protocol: HTTP
+    hostnames:
+      - api.example.com
+
+virtualHosts:
+  - name: vh-1
+    domains:
+      - api.example.com
+    routes:
+      - users-route
+      - health-route
+
+routes:
+  - id: users-route
+    priority: 0
+    createdAt: 1000
+    match:
+      path:
+        type: prefix
+        value: /users
+      method:
+        - GET
+      headers: []
+    filters: []
+    backend:
+      type: single
+      clusters:
+        - name: users-service
+
+  - id: health-route
+    priority: 0
+    createdAt: 1001
+    match:
+      path:
+        type: exact
+        value: /healthz
+      method:
+        - GET
+      headers: []
+    filters: []
+    backend:
+      type: single
+      clusters:
+        - name: health-service
+
+filters: []
+
+clusters:
+  - name: users-service
+    endpoints:
+      - users-pod-1
+      - users-pod-2
+      - users-pod-3
+  - name: health-service
+    endpoints:
+      - health-pod-1

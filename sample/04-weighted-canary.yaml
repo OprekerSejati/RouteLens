@@ -1,0 +1,75 @@
+# ============================================================
+# 04 — Weighted Canary Routing
+# ============================================================
+# Request: GET api.example.com/search?q=golang
+# Backend: weighted routing — 80% traffic ke search-stable, 20% ke search-canary
+# Hash: deterministic based on host+path, request yg sama selalu ke backend yg sama
+# ============================================================
+
+listeners:
+  - name: listener-1
+    port: 80
+    protocol: HTTP
+    hostnames:
+      - api.example.com
+      - "*.example.com"
+
+virtualHosts:
+  - name: vh-1
+    domains:
+      - api.example.com
+    routes:
+      - search-route
+      - checkout-route
+
+routes:
+  - id: search-route
+    priority: 0
+    createdAt: 1000
+    match:
+      path:
+        type: prefix
+        value: /search
+      method:
+        - GET
+      headers: []
+    filters: []
+    backend:
+      type: weighted
+      clusters:
+        - name: search-stable
+          weight: 80
+        - name: search-canary
+          weight: 20
+
+  - id: checkout-route
+    priority: 0
+    createdAt: 1001
+    match:
+      path:
+        type: prefix
+        value: /checkout
+      method:
+        - POST
+      headers: []
+    filters: []
+    backend:
+      type: single
+      clusters:
+        - name: checkout-service
+
+filters: []
+
+clusters:
+  - name: search-stable
+    endpoints:
+      - search-v1-pod-1
+      - search-v1-pod-2
+  - name: search-canary
+    endpoints:
+      - search-v2-pod-1
+  - name: checkout-service
+    endpoints:
+      - checkout-pod-1
+      - checkout-pod-2
+      - checkout-pod-3
